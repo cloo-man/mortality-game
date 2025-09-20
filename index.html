@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pre‑Industrial Mortality Roller · Codex Edition</title>
+  <style>
+    :root{ --ink:#2b1a0e; --ink-muted:#5b4026; --gold:#d6b651; --gold-deep:#b38c21; --gold-glow:rgba(255,215,90,.35); --good:#116b3a; --bad:#8b1e1e; --panel:#faf3df; --shadow: rgba(0,0,0,.45); }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{ margin:0; color:var(--ink); font-family: ui-serif, Georgia, "Times New Roman", serif; background: radial-gradient(1400px 800px at 50% -10%, #efe6ce 0%, #e2d3b1 40%, #d8c59b 70%, #cdb680 100%); }
+    .stage{min-height:100%; display:grid; place-items:center; padding:32px}
+    .folio{ position:relative; width:min(1100px, 96vw); border-radius:18px; overflow:hidden; box-shadow: 0 18px 50px var(--shadow); background:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA/cAAAXlCAIAAADLKr8yAAAQAElEQVR4ARxaBbgVVdfe03W6z+0uukMEBVFEUpBQUFQExc7Pbk...Ko8gsKILnl9sHEMoBsaJJM83uLZqWhFHnmfRRGXNg9XCxRkZw6HlMg7iEkIhHCrKqvr/AAAA//9vluqhAAAABklEQVQDAETlTULQOKe7AAAAAElFTkSuQmCC') center/cover no-repeat; display:grid; grid-template-columns: 1fr 3fr; padding: clamp(48px,6vw,96px); }
+    
+    .folio > *{ position:relative; z-index:1; }
+
+    .sidebar{ padding:16px; border-right:2px solid var(--gold-deep); background:#f9f3df }
+    .children-log{ font-size:14px; line-height:1.4; }
+    .children-log h2{ font-size:16px; margin:0 0 8px; }
+    .children-log .count{ font-weight:800; color:#274a2f }
+    .children-log ul{ list-style:none; padding-left:0; margin:8px 0 0; }
+    .children-log li{ padding:4px 6px; border-bottom:1px dashed #d8c48e; font-variant-numeric:tabular-nums }
+    .children-log .empty{ color:var(--ink-muted); font-style:italic }
+    .year-tool{ margin-top:12px; padding-top:10px; border-top:2px solid var(--gold-deep); }
+    .year-tool label{ display:block; font-weight:800; margin-bottom:6px }
+    .year-tool input{ width:100%; padding:8px 10px; border:1px solid #c9a227; border-radius:8px; background:#fffaf0; font-weight:700 }
+    .timeline{ margin-top:8px; font-size:13px }
+    .marital{ margin-top:10px; font-size:13px; color:#274a2f }
+
+    .main{ padding:16px; }
+    .head{ padding:18px 18px 6px; text-align:center }
+    h1{ margin:0; font-size: clamp(24px, 4vw, 34px); letter-spacing:.2px }
+    .sub{ margin:6px 0 16px; color:#2b1a0e }
+
+    .controls{ position:relative; display:grid; place-items:center; padding:44px 18px 16px }
+    .roll-btn{ cursor:pointer; border:none; font-weight:900; padding:14px 24px; border-radius:999px; font-size:clamp(18px, 3vw, 22px); background: radial-gradient(120px 60px at 50% 0%, #fff2bf, #f1cf58), linear-gradient(180deg, #e7c55a, #b88d23); color:#3b2a05; box-shadow: 0 10px 26px rgba(184,141,35,.45), inset 0 2px 0 rgba(255,255,255,.6); outline:2px solid rgba(255,230,100,.5) }
+    .roll-btn:active{ transform: translateY(1px) }
+    .side-controls{ position:absolute; right:18px; top:8px; display:flex; gap:8px }
+    .side-controls .btn{ cursor:pointer; border:none; padding:6px 10px; border-radius:10px; font-weight:800; font-size:12px }
+    .btn-ghost{ background:#fff5d9; color:#2b1a0e; border:1px solid #c9a227 }
+    .btn-disabled{ opacity:.55; pointer-events:none; filter:grayscale(20%); }
+    .btn-secondary{ background:#274a2f; color:#fff }
+
+    .toggle-row{ display:flex; justify-content:center; padding:8px 18px 10px }
+    .toggle{ cursor:pointer; border:1px solid #c9a227; background:#fff5d9; color:#2b1a0e; border-radius:10px; padding:6px 10px; font-weight:800; font-size:13px }
+
+    .results{ max-height:0; overflow:hidden; transition:max-height .35s ease, padding .35s ease; padding:0; }
+    .results.open{ max-height:70vh; padding:0 18px 18px; }
+
+    .table-wrap{ max-height:60vh; overflow:auto; border:1px solid #c9a227; border-radius:10px; background: rgba(255,255,255,.7) }
+    table{ width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums }
+    th,td{ padding:8px 10px; border-bottom:1px solid #e3d29f; text-align:center }
+    th{ position:sticky; top:0; background:#f6e9c6; z-index:1; }
+    .shield{ color:var(--good); font-weight:900 }
+    .skull{ color:var(--bad); font-weight:900 }
+    .muted{ color:var(--ink-muted) }
+    tr.juvenile td:first-child, tr.juvenile td:nth-child(2){ color:var(--ink-muted) }
+    .lock{ opacity:.75; font-size:12px; margin-left:6px }
+
+    .hero-result{ display:grid; place-items:center; text-align:center; padding:14px 18px 10px; }
+    .hero-result > div{ background:linear-gradient(180deg, #fff6d4, #f3e0a6); display:inline-block; padding:12px 16px; border-radius:14px; border:2px solid var(--gold); box-shadow:0 10px 28px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.6) }
+    .hero-result .hr-title{ font-weight:900; font-size:clamp(18px,3.2vw,24px); color:#3b2a05 }
+    .hero-result .hr-sub{ margin-top:6px; font-size:12px; color:var(--ink-muted) }
+    .hero-result.alive .hr-title{ color:var(--good) }
+    .hero-result.dead .hr-title{ color:var(--bad) }
+    .gender-badge{ display:flex; justify-content:center; padding:4px 0 8px }
+    .gender-badge .chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:2px solid var(--gold); font-weight:900; box-shadow:0 6px 16px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.6); background:linear-gradient(180deg,#fff6d4,#f3e0a6) }
+    .gender-badge .chip.male{ color:#0b4e8a }
+    .gender-badge .chip.female{ color:#8a0b5a }
+      /* ---------- Mobile responsiveness ---------- */
+    @media (max-width: 900px){
+      .folio{ grid-template-columns: 1fr; }
+      .sidebar{ border-right:none; border-bottom:2px solid var(--gold-deep); }
+    }
+    @media (max-width: 700px){
+      .head h1{ font-size: clamp(20px, 6vw, 28px); }
+      .sub{ font-size: 13px; }
+      .controls{ padding: 22px 12px 12px; }
+      .roll-btn{ width:100%; padding:16px 20px; font-size: clamp(18px, 5.2vw, 22px); }
+      .side-controls{ position:static; margin-top:8px; justify-content:center; flex-wrap:wrap; }
+      .side-controls .btn{ padding:8px 12px; font-size:13px; }
+      .table-wrap{ -webkit-overflow-scrolling: touch; }
+      /* Hide less-critical columns on narrow phones; keep core gameplay columns visible */
+      /* Columns: 1 Age | 2 Peril | 3 Cast | 4 Mark | 5 Marriage % | 6 Married? | 7 Spouse Age | 8 Spouse Cast | 9 Fertility | 10 Birth Cast | 11 Child */
+      table th:nth-child(5), table td:nth-child(5), /* Marriage % */
+      table th:nth-child(6), table td:nth-child(6), /* Married? */
+      table th:nth-child(7), table td:nth-child(7), /* Spouse Age */
+      table th:nth-child(8), table td:nth-child(8), /* Spouse Cast */
+      table th:nth-child(10), table td:nth-child(10) /* Birth Cast */
+      { display:none; }
+      th,td{ padding:7px 8px; font-size:13px }
+      .children-log h2{ font-size:15px; }
+      .year-tool input{ padding:10px 12px; }
+    }
+    @media (max-width: 420px){
+      th,td{ padding:6px 6px; font-size:12px }
+      .children-log li{ padding:3px 4px; }
+    }
+    /* Subtle nudge on mobile to hint horizontal scroll */
+    .table-wrap{ position:relative }
+    @media (max-width: 700px){
+      .table-wrap::after{
+        content: 'Swipe for more →';
+        position:absolute; right:8px; top:8px; font-size:11px; color:var(--ink-muted); background:rgba(255,255,255,.7); padding:2px 6px; border-radius:8px; border:1px solid #e3d29f;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="folio">
+      <aside class="sidebar">
+        <div class="children-log" id="childrenLog">
+          <h2>Offspring <span class="count" id="childrenCount">0</span></h2>
+          <ul id="childrenList"><li class="empty">No children yet.</li></ul>
+          <div class="year-tool">
+            <label for="birthYearInput">Character birth year</label>
+            <input id="birthYearInput" type="number" inputmode="numeric" placeholder="e.g., 1685" />
+            <div id="timeline" class="timeline" style="display:none"></div>
+            <div id="deathYear" class="timeline"></div>
+            <div id="maritalStatus" class="marital"></div>
+          </div>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="head">
+          <h1>The Ledger of Life and Death</h1>
+          <div class="sub">Herein lies the account of life, as decreed by peril and chance..</div>
+        </div>
+
+        <div class="controls">
+          <button id="btnRoll" class="roll-btn">🎲 Cast the Lots</button>
+          <div class="side-controls">
+            <a id="btnDownload" class="btn btn-ghost btn-disabled" download="mortality_results.csv" href="#" title="Download results">⬇️ Download</a>
+            <button id="btnSettings" class="btn btn-secondary" title="Open settings">⚙️ Settings</button>
+          </div>
+        </div>
+
+        <div id="genderBadge" class="gender-badge" aria-hidden="false"></div>
+        <div id="heroResult" class="hero-result" aria-live="polite" role="status">
+          <div class="hr-title">No casting yet.</div>
+          <div class="hr-sub">Press <b>Cast the Lots</b> to begin.</div>
+        </div>
+
+        <div class="toggle-row">
+          <button id="btnToggle" class="toggle" aria-expanded="false" aria-controls="results">📖 Open the Codex</button>
+        </div>
+
+        <section id="results" class="results" aria-hidden="true">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Age</th><th>Peril (%)</th><th>Cast</th><th>Mark</th>
+                  <th>Marriage Chance (%)</th><th>Married?</th><th>Spouse Age</th><th>Spouse Cast</th><th>Fertility Chance (%)</th><th>Birth Cast</th><th>Child</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal Template -->
+  <template id="settingsTpl">
+    <div class="settings-backdrop" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.55); z-index:50;">
+      <div class="settings" style="width:min(720px,92vw); background:#fffdf6; border:2px solid var(--gold); border-radius:12px; box-shadow:0 30px 60px rgba(0,0,0,.55);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#efe4c5; border-bottom:1px solid #c9a227;">
+          <h2 id="settingsTitle" style="margin:0; font-size:18px;">Settings</h2>
+          <button id="btnClose" style="background:#8b1e1e; color:#fff; border:none; border-radius:8px; padding:6px 10px; cursor:pointer; font-weight:800">✕</button>
+        </div>
+        <div style="padding:14px 16px; display:grid; gap:14px;">
+          <fieldset style="border:1px dashed #c9a227; border-radius:8px; padding:10px">
+            <legend style="padding:0 6px">Fertility & Risk</legend>
+            <label style="display:block; margin-bottom:6px"><input id="toggleSpacing" type="checkbox" checked> Apply postpartum spacing next year (×0.4)</label>
+            <label>Maternal risk per birth: <input id="maternalRisk" type="number" min="0" max="5" step="0.1" value="1.0" style="width:70px"> %</label>
+          </fieldset>
+          <fieldset style="border:1px dashed #c9a227; border-radius:8px; padding:10px">
+            <legend style="padding:0 6px">Marriage</legend>
+            <label>Base marriage chance per year (ages 16–55): <input id="marriageChance" type="number" min="0" max="30" step="0.5" value="10" style="width:70px"> %</label>
+          </fieldset>
+          <div style="font-size:12px; color:#5b4026">Changes here affect the next roll.</div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+<script>
+(function(){
+  // Mortality schedule
+  const mortality = new Map([[0,25.0],[1,9.0],[2,6.0],[3,4.0],[4,2.5],[5,1.8],[6,1.6],[7,1.5],[8,1.4],[9,1.3],[10,1.0],[11,0.9],[12,0.8],[13,0.8],[14,0.8],[15,0.8],[16,0.8],[17,0.9],[18,1.0],[19,1.0],[20,1.0],[21,1.0],[22,1.1],[23,1.1],[24,1.1],[25,1.2],[26,1.2],[27,1.2],[28,1.3],[29,1.3],[30,1.3],[31,1.4],[32,1.4],[33,1.5],[34,1.5],[35,1.6],[36,1.6],[37,1.7],[38,1.7],[39,1.8],[40,1.9],[41,2.0],[42,2.1],[43,2.2],[44,2.3],[45,2.5],[46,2.6],[47,2.7],[48,2.8],[49,3.0],[50,3.2],[51,3.4],[52,3.6],[53,3.8],[54,4.0],[55,4.3],[56,4.6],[57,4.9],[58,5.2],[59,5.5],[60,5.9],[61,6.3],[62,6.7],[63,7.1],[64,7.5],[65,8.0],[66,8.5],[67,9.0],[68,9.5],[69,10.0],[70,10.6],[71,11.2],[72,11.8],[73,12.4],[74,13.0],[75,13.8],[76,14.6],[77,15.4],[78,16.2],[79,17.0],[80,18.0],[81,19.0],[82,20.0],[83,21.0],[84,22.0],[85,23.5],[86,25.0],[87,26.5],[88,28.0],[89,30.0],[90,32.0],[91,34.0],[92,36.0],[93,38.0],[94,40.0],[95,43.0],[96,46.0],[97,49.0],[98,52.0],[99,55.0],[100,60.0]]);
+  // Female fertility ASFR (probabilities 0..1)
+  const ASFR = new Map(Object.entries({16:10,17:12,18:16,19:18,20:23,21:25,22:26,23:26,24:25,25:24,26:23,27:22,28:21,29:20,30:18,31:16,32:15,33:14,34:12,35:9,36:8,37:7,38:6,39:5,40:3,41:2,42:1.5,43:1.0,44:0.5,45:0.2}).map(([k,v])=>[+k, v/100]));
+  const avgASFR = (()=>{ let s=0,c=0; for(const [a,p] of ASFR){ s+=p; c++; } return s/c; })();
+
+  function rollD100(){ try{ if(window.crypto && crypto.getRandomValues){ const b=new Uint8Array(2); crypto.getRandomValues(b); return ((b[0]<<8)|b[1])%100+1; } }catch(e){} return Math.floor(Math.random()*100)+1; }
+  function toCSV(rows){ const header='Age,DeathChancePercent,Roll_d100,Progress\n'; const lines=rows.map(r=>`${r.age},${r.chance.toFixed(1)},${r.roll},${r.progress}`); return header + lines.join('\n'); }
+  function maleAgeFactor(a){ if(a<=45) return 1.0; if(a<=55) return 0.8; if(a<=60) return 0.5; return 0.2; }
+  const isFertilityPermittedAtAge=(a)=>a>=16;
+  const inFemaleFertile=(a)=>a>=16 && a<=45;
+
+  function sampleSpouseAge(protagonistAge, spouseSex){
+    const u=Math.random()||1e-6, v=Math.random()||1e-6; const z=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+    let age=Math.round(protagonistAge + 2*z);
+    age=Math.max(16, age);
+    if(spouseSex==='female') age=Math.min(45, age);
+    return age;
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const tbody=document.getElementById('tbody');
+    const btnRoll=document.getElementById('btnRoll');
+    const btnDownload=document.getElementById('btnDownload');
+    const results=document.getElementById('results');
+    const btnToggle=document.getElementById('btnToggle');
+    const hero=document.getElementById('heroResult');
+    const genderBadge=document.getElementById('genderBadge');
+    const childrenCountEl=document.getElementById('childrenCount');
+    const childrenListEl=document.getElementById('childrenList');
+    const birthYearInput=document.getElementById('birthYearInput');
+    const deathYearEl=document.getElementById('deathYear');
+    const maritalStatus=document.getElementById('maritalStatus');
+    const settingsTpl=document.getElementById('settingsTpl');
+
+    let lastBirthAges=[]; let lastBlobUrl=null; let spacingOn=true; let maternalRiskPct=1.0; // %
+    let lastDeathAge=null; let hasSim=false; let baseMarriageChance=10; // %
+    btnDownload.title='Roll first to enable download';
+
+    function simulate(){
+      tbody.innerHTML='';
+      const currentGender=(Math.random()<0.5?'male':'female');
+      genderBadge.innerHTML=`<span class="chip ${currentGender}" title="${currentGender==='male'?'Male':'Female'}">${currentGender==='male'?'♂ Male':'♀ Female'}</span>`;
+
+      let died=null; const rows=[]; let lastAge=null,lastRoll=null,lastChance=null; let childCount=0; const birthAges=[]; let spacingPenaltyNextYear=1.0;
+      let married=false; let spouseAlive=false; let spouseAge=null; let spouseSex = currentGender==='male'?'female':'male';
+
+      for(let a=0;a<=100;a++){
+        const baseChance=mortality.get(a);
+        let roll='', mark='';
+        let marriedDisp = married?'Yes':''; let spouseAgeDisp = spouseAlive?String(spouseAge):''; let spouseRollDisp='';
+        let marriageChanceDisp='';
+        let spouseRolled=false;
+        let pFertDisplay=''; let rBirthDisplay=''; let childIcon='';
+
+        if(died===null){
+          // 1) Mortality of protagonist
+          roll=rollD100(); lastAge=a; lastRoll=roll; lastChance=baseChance;
+          if(roll<=baseChance){ died=a; mark='☠'; }
+          else{
+            // 2) Marriage try if of age and not married (rolls start at 16)
+            if(!married && a>=16 && a<=55){
+              marriageChanceDisp = String(baseMarriageChance);
+              const rM = rollD100();
+              if(rM <= baseMarriageChance){
+                married=true; spouseAlive=true; spouseAge=sampleSpouseAge(a, spouseSex);
+                marriedDisp='Yes'; spouseAgeDisp=String(spouseAge);
+              }
+            }
+            // 3) Spouse mortality (if married)
+            if(married && spouseAlive){
+              const sMort = mortality.get(Math.min(100, Math.max(0, spouseAge))) || 0;
+              const sRoll = rollD100(); spouseRollDisp=String(sRoll); spouseRolled=true;
+              if(sRoll <= sMort){ spouseAlive=false; married=false; }
+            }
+            marriedDisp = married && spouseAlive ? 'Yes' : '';
+            spouseAgeDisp = married && spouseAlive ? String(spouseAge) : '';
+
+            // 4) Fertility
+            if(isFertilityPermittedAtAge(a)){
+              if(currentGender==='female'){
+                let pBirth=(ASFR.get(a)||0) * (married?1.0:0.5) * spacingPenaltyNextYear; // 0..1
+                pFertDisplay=(pBirth*100).toFixed(1);
+                spacingPenaltyNextYear=1.0;
+                if(pBirth>0){ const rBirth=rollD100(); rBirthDisplay=String(rBirth); if(rBirth<=pBirth*100){ childCount++; birthAges.push(a); childIcon='👶'; if(spacingOn) spacingPenaltyNextYear=0.4; const rMat=rollD100(); if(rMat<=maternalRiskPct){ died=a; mark='☠'; } } }
+              } else { // male protagonist
+                let pBase;
+                if(married && spouseAlive && inFemaleFertile(spouseAge)){
+                  pBase = (ASFR.get(spouseAge)||0);
+                } else {
+                  pBase = avgASFR * 0.5; // unmarried halves chance
+                }
+                let pBirth = pBase * 0.85 * maleAgeFactor(a) * spacingPenaltyNextYear;
+                pFertDisplay=(pBirth*100).toFixed(1);
+                spacingPenaltyNextYear=1.0;
+                if(pBirth>0){ const rBirth=rollD100(); rBirthDisplay=String(rBirth); if(rBirth<=pBirth*100){ childCount++; birthAges.push(a); childIcon='👶'; if(spacingOn) spacingPenaltyNextYear=0.4; } }
+              }
+            } else { pFertDisplay='0.0'; }
+
+            if(died===null){ mark='🛡'; }
+          }
+        }
+
+        rows.push({age:a,chance:baseChance,roll,mark,marriageChanceDisp,marriedDisp,spouseAgeDisp,spouseRollDisp,pFertDisplay,rBirthDisplay,childIcon});
+
+        // advance spouse age each year AFTER using it
+        // Continue spouse mortality even after protagonist death
+        if(spouseAlive && !spouseRolled){
+          const sMort = mortality.get(Math.min(100, Math.max(0, spouseAge))) || 0;
+          const sRoll = rollD100();
+          spouseRollDisp = String(sRoll);
+          if(sRoll <= sMort){ spouseAlive = false; }
+        }
+        // Display spouse age whenever spouse exists
+        spouseAgeDisp = spouseAlive ? String(spouseAge) : '';
+        // Once the protagonist has died, suppress marriage chance display; keep showing spouse until they die
+        if(died!==null){ marriageChanceDisp=''; marriedDisp = married && spouseAlive ? 'Yes' : ''; }
+        // Age spouse each year they remain alive
+        if(spouseAlive){ spouseAge++; }
+      }
+
+      // Render table
+      const frag=document.createDocumentFragment();
+      for(const r of rows){
+        const tr=document.createElement('tr'); if(r.age<16) tr.classList.add('juvenile');
+        const cls=r.mark==='🛡'?'shield':(r.mark==='☠'?'skull':'muted');
+        const ageCell=`${r.age}${r.age<16?" <span class='lock' title='Offspring disabled before age 16'>🔒</span>":''}`;
+        tr.innerHTML=`<td>${ageCell}</td><td>${r.chance.toFixed(1)}</td><td>${r.roll||''}</td><td class='${cls}'>${r.mark||''}</td><td>${r.marriageChanceDisp||''}</td><td>${r.marriedDisp||''}</td><td>${r.spouseAgeDisp||''}</td><td>${r.spouseRollDisp||''}</td><td>${r.pFertDisplay||''}</td><td>${r.rBirthDisplay||''}</td><td>${r.childIcon||''}</td>`;
+        frag.appendChild(tr);
+      }
+      tbody.appendChild(frag);
+
+      // Sidebar offspring list (Age → Year)
+      childrenCountEl.textContent=String(childCount);
+      childrenListEl.innerHTML = childCount===0
+        ? '<li class="empty">No children yet.</li>'
+        : birthAges.map(a => {
+            const base = birthYearInput.value ? parseInt(birthYearInput.value,10) : null;
+            const yearStr = (base!==null && !Number.isNaN(base)) ? ` → Year ${base + a}` : '';
+            return `<li>Age ${a}${yearStr}</li>`;
+          }).join('');
+
+      // Death year line
+      lastBirthAges=birthAges.slice();
+      lastDeathAge = (died===null ? 100 : died); hasSim=true; updateDeathYear();
+
+      // Marital status line
+      maritalStatus.textContent = (rows.some(r=>r.marriedDisp==='Yes')) ? 'Married at some point during the life.' : 'Never married.';
+
+      // CSV
+      const csv=toCSV(rows.map(r=>({age:r.age,chance:r.chance,roll:r.roll,progress:(r.mark==='🛡'?'✓':(r.mark==='☠'?'✗':''))})));
+      try{ if(lastBlobUrl) URL.revokeObjectURL(lastBlobUrl); const ts=new Date(); const yyyy=ts.getFullYear(),mm=String(ts.getMonth()+1).padStart(2,'0'),dd=String(ts.getDate()).padStart(2,'0'),hh=String(ts.getHours()).padStart(2,'0'),mi=String(ts.getMinutes()).padStart(2,'0'); const fname=`mortality_results_${yyyy}${mm}${dd}_${hh}${mi}.csv`; const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); lastBlobUrl=url; btnDownload.href=url; btnDownload.download=fname; btnDownload.classList.remove('btn-disabled'); btnDownload.title='Download CSV'; }catch(e){}
+
+      // Hero banner
+      hero.classList.remove('alive','dead'); const childrenLine=` · Children: <b>${childCount}</b>${childCount?` (ages ${birthAges.join(', ')})`:''}`;
+      if(died===null){ hero.classList.add('alive'); hero.innerHTML=`<div class=\"hr-title\">The ${currentGender} pilgrim endures all years (0–100)${childrenLine}.</div><div class=\"hr-sub\">Last cast at age ${lastAge}: rolled <b>${lastRoll}</b> vs peril <b>${lastChance.toFixed(1)}%</b></div>`; }
+      else { hero.classList.add('dead'); hero.innerHTML=`<div class=\"hr-title\">Perished at age ${died}${childrenLine}.</div><div class=\"hr-sub\">Cast was <b>${lastRoll}</b> at peril <b>${lastChance.toFixed(1)}%</b>.</div>`; }
+    }
+
+    // UI wiring
+    btnRoll.addEventListener('click', simulate);
+    btnToggle.addEventListener('click', ()=>{ const open=results.classList.toggle('open'); results.setAttribute('aria-hidden', String(!open)); btnToggle.setAttribute('aria-expanded', String(open)); btnToggle.textContent=open?'📕 Close the Codex':'📖 Open the Codex'; });
+
+    birthYearInput.addEventListener('input', ()=>{ updateDeathYear(); });
+
+    // Settings modal wiring
+    const btnSettings=document.getElementById('btnSettings');
+    btnSettings.addEventListener('click', ()=>{ const el=settingsTpl.content.firstElementChild.cloneNode(true); document.body.appendChild(el); const backdrop=el; const btnClose=el.querySelector('#btnClose'); const toggleSpacing=el.querySelector('#toggleSpacing'); const maternalRisk=el.querySelector('#maternalRisk'); const marriageChance=document.getElementById('marriageChance', el) || el.querySelector('#marriageChance'); toggleSpacing.checked=spacingOn; maternalRisk.value=String(maternalRiskPct); marriageChance.value=String(baseMarriageChance); toggleSpacing.addEventListener('change', ()=>{ spacingOn=toggleSpacing.checked; }); maternalRisk.addEventListener('input', ()=>{ const v=parseFloat(maternalRisk.value); if(!isNaN(v)) maternalRiskPct=Math.max(0,Math.min(5,v)); }); marriageChance.addEventListener('input', ()=>{ const v=parseFloat(marriageChance.value); if(!isNaN(v)) baseMarriageChance=Math.max(0,Math.min(30,v)); }); function close(){ if(backdrop && backdrop.parentNode){ backdrop.parentNode.removeChild(backdrop); } } backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) close(); }); btnClose.addEventListener('click', close); window.addEventListener('keydown', function onEsc(e){ if(e.key==='Escape'){ close(); window.removeEventListener('keydown', onEsc);} }); });
+
+    function updateDeathYear(){ if(!birthYearInput.value || !hasSim){ deathYearEl.textContent=''; return; } const y=parseInt(birthYearInput.value,10); if(Number.isNaN(y) || lastDeathAge==null){ deathYearEl.textContent=''; return; } const dy = y + lastDeathAge; deathYearEl.textContent = `Character died in ${dy} (age ${lastDeathAge})`; }
+
+    // Self‑Tests (console)
+    (function(){ console.groupCollapsed('%cSelf‑Tests','color:#274a2f;font-weight:bold'); for(const [age,p] of ASFR){ console.assert(p>=0 && p<=1, 'ASFR out of bounds at age', age, p); } console.assert(typeof sampleSpouseAge==='function','sampleSpouseAge exists'); console.assert(typeof updateDeathYear==='function','updateDeathYear exists'); console.assert(document.querySelector('thead tr').children.length===11,'table has 11 columns'); const csv=toCSV([{age:0,chance:25,roll:42,progress:'✓'},{age:1,chance:9,roll:77,progress:'✓'}]); console.assert(csv.startsWith('Age,DeathChancePercent,Roll_d100,Progress\n'),'CSV header ok'); console.groupEnd(); })();
+  });
+})();
+</script>
+</body>
+</html>
